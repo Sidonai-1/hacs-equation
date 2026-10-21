@@ -53,7 +53,7 @@ class EquationDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EquationDevi
             )
 
         for device in new_devices.values():
-            device_update_info(self.hass, device)
+            device_update_info(self.hass, device, self.config_entry.entry_id if self.config_entry else None)
 
         return new_devices
 
@@ -124,16 +124,21 @@ class EquationDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EquationDevi
 
 
 @callback
-def device_update_info(hass: HomeAssistant, equation_device: EquationDevice) -> None:
+def device_update_info(
+    hass: HomeAssistant, equation_device: EquationDevice, entry_id: str | None = None
+) -> None:
     """Update device registry info."""
 
     LOGGER.debug("Updating device registry info for %s", equation_device.name)
 
     dev_registry = device_registry.async_get(hass)
 
-    if device := dev_registry.async_get_device(
-        identifiers={(DOMAIN, equation_device.id)},
-    ):
+    # Fork: async_get_device(identifiers=...) is deprecated (removed in HA 2027.8).
+    if entry_id and hasattr(dev_registry, "async_get_device_by_identifier"):
+        device = dev_registry.async_get_device_by_identifier((DOMAIN, equation_device.id), entry_id)
+    else:
+        device = dev_registry.async_get_device(identifiers={(DOMAIN, equation_device.id)})
+    if device:
         dev_registry.async_update_device(
             device.id, sw_version=equation_device.firmware_version
         )

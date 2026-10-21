@@ -8,7 +8,14 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "equation"
 DEVICE_DOMAIN = "climate"
-PLATFORMS: list[str] = [Platform.CLIMATE, Platform.SENSOR, Platform.UPDATE]
+PLATFORMS: list[str] = [
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.UPDATE,
+    Platform.NUMBER,
+    Platform.SWITCH,
+    Platform.BINARY_SENSOR,
+]
 CONF_USERNAME = "equation_username"
 CONF_PASSWORD = "equation_password"
 CONF_INSTALLATION = "equation_installation"

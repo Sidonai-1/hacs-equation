@@ -309,6 +309,25 @@ class EquationDeviceManager:
         LOGGER.warning("Ignoring unsupported command: %s", command)
         return False
 
+    async def async_set_fields(self, device: EquationDevice, body: dict) -> bool:
+        """Fork: write settings fields to a device and mirror them locally until the next refresh."""
+
+        result: ApiResponse = await self.hass.async_add_executor_job(
+            self.equation_api.set_device_fields, device, body
+        )
+
+        if not result.success:
+            LOGGER.error("Failed to write %s to [%s]: %s", body, device.name, result.error_message)
+            return False
+
+        device.raw.update(body)
+        for field, attr in (("comfort", "comfort_temp"), ("eco", "eco_temp"), ("ice", "ice_temp")):
+            if field in body:
+                setattr(device, attr, float(body[field]))
+        if "ice_mode" in body:
+            device.ice_mode = bool(body["ice_mode"])
+        return True
+
     async def _set_device_temp(self, device: EquationDevice, new_temp: float) -> bool:
         """Set device temperature."""
 
@@ -322,6 +341,10 @@ class EquationDeviceManager:
             return False
 
         # Update the device internal status
+        if not device.power:
+            # Fork: an off radiator only had its comfort temperature changed (see set_device_temp).
+            device.comfort_temp = new_temp
+            return True
         device.temp = new_temp
         device.mode = RADIATOR_MODE_MANUAL
         device.power = True

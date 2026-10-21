@@ -467,6 +467,18 @@ class EquationAPI:
 
         return self._send_patch_request(url, args, body)
 
+    def set_device_fields(self, device: EquationDevice, body: dict) -> ApiResponse:
+        """Fork: PATCH arbitrary settings fields (e.g. {"eco": 17.5} or {"buzzer": false}) of a device."""
+
+        if not self._ensure_valid_auth():
+            return ApiResponse(False, None, "Invalid authentication.")
+
+        url = "{}{}".format(
+            FIREBASE_DEFAULT_URL, FIREBASE_DEVICE_DATA_PATH_BY_ID.format(device.id)
+        )
+
+        return self._send_patch_request(url, {"auth": self.auth_token}, dict(body))
+
     def set_device_preset(self, device: EquationDevice, preset_mode: str) -> ApiResponse:
         """Set the preset."""
 

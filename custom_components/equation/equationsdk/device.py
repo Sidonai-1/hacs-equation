@@ -97,6 +97,8 @@ class EquationDevice:
 
         data = device_info["data"]
         firmware_data = device_info.get("firmware")
+        # Fork: raw cloud fields, used by the generic number/switch/binary_sensor entities.
+        self.raw = data
 
         # Fork fix: the cloud's default names ("Rad. C964EC") take 6 characters from the middle of the id and collide;
         # use the first 6 characters (they match the radiator's Wi-Fi hostname "Eqr-XXXX...").

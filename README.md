@@ -5,6 +5,12 @@
 >   while it is off the value is stored as its *comfort* temperature (stays off; the next "heat" uses it), and HA shows that as the target;
 > - no more crashes of the whole refresh when the cloud returns nothing for one radiator (`ApiResponse` missing argument);
 > - unique device names (`Rad. F0DA7A` instead of several `Rad. C964EC`).
+>
+> Changes in 0.3.0:
+> - new **number** entities: comfort / eco / anti-frost temperatures, probe offset (and, disabled by default, display timeout and brightness);
+> - new **switch** entities: beep, keypad lock, open-window detection, anti-frost protection (presence sensor disabled by default);
+> - new **binary sensors**: cloud connection, heating fault, probe fault, weak Wi-Fi;
+> - device registry lookup moved off the deprecated `async_get_device` (stops working in HA 2027.8).
 
 # 🌞 equation-hacs 
 A minimal integration for Equation radiators in Home Assistant. 🏡
