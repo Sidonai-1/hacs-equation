@@ -65,7 +65,8 @@ class EquationFieldEntity(EquationRadiatorEntity):
     """Base for raw-field entities."""
 
     def __init__(self, radiator: EquationDevice, coordinator: EquationDataUpdateCoordinator, field: Field) -> None:
-        super().__init__(coordinator, radiator, name=f"{radiator.name} {field.name}", unique_id=f"{radiator.id}-{field.key}")
+        super().__init__(coordinator, radiator, name=field.name, unique_id=f"{radiator.id}-{field.key}")
+        self._attr_has_entity_name = True  # friendly name = "<device name> <field name>"
         self.field = field
         self._attr_icon = field.icon
         self._attr_entity_category = field.category
