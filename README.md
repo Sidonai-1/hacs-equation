@@ -11,6 +11,12 @@
 > - new **switch** entities: beep, keypad lock, open-window detection, anti-frost protection (presence sensor disabled by default);
 > - new **binary sensors**: cloud connection, heating fault, probe fault, weak Wi-Fi;
 > - device registry lookup moved off the deprecated `async_get_device` (stops working in HA 2027.8).
+>
+> Changes in 0.3.2 (cloud connection robustness):
+> - if the token refresh fails, log in again with the stored credentials (before: unavailable until a reload);
+> - a network error during the refresh no longer counts as a successful refresh;
+> - the token is refreshed 2 min before it expires;
+> - 15 s timeout on every cloud request (only the login had one).
 
 # 🌞 equation-hacs 
 A minimal integration for Equation radiators in Home Assistant. 🏡

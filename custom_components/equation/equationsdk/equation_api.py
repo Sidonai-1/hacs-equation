@@ -33,6 +33,8 @@ from .settings import (
     FIREBASE_INSTALLATIONS_PATH,
 )
 
+REQUEST_TIMEOUT_SECONDS = 15  # Fork: the data requests had no timeout
+
 ApiResponse = namedtuple("ApiResponse", ["success", "data", "error_message"])
 
 
@@ -68,7 +70,7 @@ class EquationAPI:
         self.auth_token_expire_date = login_data.data["expires"]
         self.local_id = login_data.data["local_id"]
 
-        self._clean_credentials()
+        # Fork: credentials are kept (not cleaned) so a rejected refresh token can be replaced by a fresh login.
 
         return ApiResponse(True, None, None)
 
@@ -87,11 +89,25 @@ class EquationAPI:
         now = datetime.now()
 
         if not self.auth_token or (
-            self.auth_token_expire_date and self.auth_token_expire_date < now
+            self.auth_token_expire_date
+            and self.auth_token_expire_date < now + timedelta(minutes=2)
         ):
+            # Fork: refresh 2 min early; if the refresh fails, log in again with the stored credentials.
             if not self._refresh_token():
-                return False
+                return self._relogin()
 
+        return True
+
+    def _relogin(self) -> bool:
+        """Fork: full login with the stored credentials (refresh token rejected, or network error)."""
+        if not self.username or not self.password:
+            return False
+        login_data = self._login_user()
+        if not login_data.success:
+            return False
+        self.auth_token = login_data.data["auth_token"]
+        self.refresh_token = login_data.data["refresh_token"]
+        self.auth_token_expire_date = login_data.data["expires"]
         return True
 
     def _refresh_token(self) -> bool:
@@ -105,8 +121,8 @@ class EquationAPI:
                 data=payload,
                 timeout=AUTH_TIMEOUT_SECONDS,
             )
-        except RequestException as e:
-            return ApiResponse(False, None, f"Network error {e}")
+        except RequestException:
+            return False  # Fork: was a (truthy) ApiResponse, so a network error counted as a successful refresh
 
         if not response:
             return False
@@ -186,6 +202,7 @@ class EquationAPI:
             response = requests.post(
                 f"{AUTH_HOST}{AUTH_ACCT_INFO_URL}?key={FIREBASE_APP_KEY}",
                 data=payload,
+                timeout=REQUEST_TIMEOUT_SECONDS,
             )
         except RequestException as e:
             return ApiResponse(False, None, f"Network error {e}")
@@ -252,7 +269,7 @@ class EquationAPI:
         url = f"{FIREBASE_DEFAULT_URL}{FIREBASE_INSTALLATIONS_PATH}"
 
         try:
-            response = requests.get(url, params=args)
+            response = requests.get(url, params=args, timeout=REQUEST_TIMEOUT_SECONDS)
         except RequestException as e:
             return ApiResponse(False, None, f"Network error {e}")
 
@@ -286,6 +303,7 @@ class EquationAPI:
             response = requests.get(
                 url,
                 params=args,
+                timeout=REQUEST_TIMEOUT_SECONDS,
             )
         except RequestException as e:
             return ApiResponse(False, None, f"Network error {e}")
@@ -319,7 +337,7 @@ class EquationAPI:
         url = f"{FIREBASE_DEFAULT_URL}{FIREBASE_INSTALLATIONS_PATH}"
 
         try:
-            response = requests.get(url, params=args)
+            response = requests.get(url, params=args, timeout=REQUEST_TIMEOUT_SECONDS)
         except RequestException as e:
             return ApiResponse(False, None, f"Network error {e}")
 
@@ -357,6 +375,7 @@ class EquationAPI:
                     FIREBASE_DEFAULT_URL, FIREBASE_DEVICES_PATH_BY_ID.format(device_id)
                 ),
                 params=args,
+                timeout=REQUEST_TIMEOUT_SECONDS,
             )
         except RequestException as e:
             return ApiResponse(False, None, f"Network error {e}")
@@ -414,7 +433,7 @@ class EquationAPI:
         )
 
         try:
-            response = requests.get(url, params=args)
+            response = requests.get(url, params=args, timeout=REQUEST_TIMEOUT_SECONDS)
         except RequestException as e:
             return ApiResponse(False, None, f"Network error {e}")
 
@@ -602,6 +621,7 @@ class EquationAPI:
                 url,
                 params=params,
                 json=body,
+                timeout=REQUEST_TIMEOUT_SECONDS,
             )
         except RequestException as e:
             return ApiResponse(False, None, f"Communications error {e}")
