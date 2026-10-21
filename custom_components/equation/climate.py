@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC
 
-from equationsdk.device import EquationDevice
+from .equationsdk.device import EquationDevice
 
 from homeassistant.components.climate import (
     PRESET_COMFORT,
@@ -84,7 +84,10 @@ class EquationHaClimate(EquationRadiatorEntity, ClimateEntity, ABC):
 
     @property
     def target_temperature(self) -> float:
-        """Return the current temperature."""
+        """Return the target temperature."""
+        # Fork: while off, show the comfort temperature (what set_temperature writes and what "heat" will use).
+        if not self._radiator.power:
+            return self._radiator.comfort_temp
         if self._radiator.mode == RADIATOR_MODE_MANUAL:
             if self._radiator.preset == RADIATOR_PRESET_ECO:
                 return self._radiator.eco_temp

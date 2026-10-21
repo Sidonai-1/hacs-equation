@@ -6,11 +6,11 @@ import asyncio
 from datetime import datetime
 from typing import Any
 
-from equationsdk.device import EquationDevice, ScheduleMode
-from equationsdk.dto import EnergyConsumptionData
-from equationsdk.model import EquationProduct
-from equationsdk.equation_api import ApiResponse, EquationAPI
-from equationsdk.utils import get_product_by_type_version
+from .equationsdk.device import EquationDevice, ScheduleMode
+from .equationsdk.dto import EnergyConsumptionData
+from .equationsdk.model import EquationProduct
+from .equationsdk.equation_api import ApiResponse, EquationAPI
+from .equationsdk.utils import get_product_by_type_version
 
 from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO, HVACMode
 from homeassistant.core import HomeAssistant

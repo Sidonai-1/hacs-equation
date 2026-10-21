@@ -2,13 +2,17 @@
   "domain": "equation",
   "name": "Equation Heaters",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/equation",
-  "requirements": ["equation-sdk==1.0.7"],
+  "documentation": "https://github.com/Sidonai-1/hacs-equation",
+  "requirements": [],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": ["@Ieshaj"],
+  "codeowners": [
+    "@Ieshaj",
+    "@Sidonai-1"
+  ],
   "iot_class": "cloud_polling",
-  "version": "0.1.5"
+  "version": "0.2.0",
+  "issue_tracker": "https://github.com/Sidonai-1/hacs-equation/issues"
 }

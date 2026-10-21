@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 
-from equationsdk.device import EquationDevice
+from .equationsdk.device import EquationDevice
 
 from homeassistant.components.update import (
     UpdateDeviceClass,

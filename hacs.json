@@ -1,5 +1,5 @@
 {
-  "name": "Equation Radiators HACS",
+  "name": "Equation Radiators (Sidonai-1 fork)",
   "content_in_root": false,
   "render_readme": true,
   "homeassistant": "2022.11.0"

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from equationsdk.device import EquationDevice
+from .equationsdk.device import EquationDevice
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry

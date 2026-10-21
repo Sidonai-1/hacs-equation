@@ -1,7 +1,7 @@
 """The Equation Heaters integration."""
 from __future__ import annotations
 
-from equationsdk.equation_api import ApiResponse, EquationAPI
+from .equationsdk.equation_api import ApiResponse, EquationAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

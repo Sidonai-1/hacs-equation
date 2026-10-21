@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from equationsdk.equation_api import EquationAPI
+from .equationsdk.equation_api import EquationAPI
 import voluptuous as vol
 
 from homeassistant import config_entries
