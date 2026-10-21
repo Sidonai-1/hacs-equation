@@ -101,8 +101,8 @@ class EquationDevice:
         # Fork fix: the cloud's default names ("Rad. C964EC") take 6 characters from the middle of the id and collide;
         # use the first 6 characters (they match the radiator's Wi-Fi hostname "Eqr-XXXX...").
         self.name = data["name"]
-        if re.fullmatch(r"Rad\. [0-9A-F]{6}", self.name or "") and len(device_id) >= 6:
-            self.name = f"Rad. {device_id[:6]}"
+        if re.fullmatch(r"Rad\. [0-9A-F]{6}", self.name or "") and len(getattr(self, "id", "") or "") >= 6:
+            self.name = f"Rad. {self.id[:6]}"
         self.nominal_power = int(data["nominal_power"])
         self.power = bool(data["power"])
         self.mode = data["mode"]
