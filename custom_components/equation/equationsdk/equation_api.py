@@ -6,7 +6,7 @@ from requests.exceptions import RequestException
 
 from typing import Any, Dict, Optional, List
 from collections import namedtuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from .utils import build_update_map
 from .device import EquationDevice, ScheduleMode
@@ -86,7 +86,8 @@ class EquationAPI:
     def _ensure_valid_auth(self) -> bool:
         """Ensure there is a valid authentication token present."""
 
-        now = datetime.now()
+        # Fork: UTC, not local time (a naive local clock jumps back 1 h at the DST change and kept an expired token)
+        now = datetime.now(timezone.utc)
 
         if not self.auth_token or (
             self.auth_token_expire_date
@@ -109,6 +110,14 @@ class EquationAPI:
         self.refresh_token = login_data.data["refresh_token"]
         self.auth_token_expire_date = login_data.data["expires"]
         return True
+
+    def _http_error(self, response, where: str) -> ApiResponse:
+        """Fork: error result for a non-2xx response. A requests Response is falsy for 4xx/5xx, so the old
+        "No response from API" messages were really HTTP errors (and one of them raised a TypeError)."""
+        if response.status_code in (401, 403):
+            # Token rejected (expired early, revoked, clock trouble): force a refresh / re-login on the next call.
+            self.auth_token = None
+        return ApiResponse(False, None, f"{where} returned HTTP {response.status_code}")
 
     def _refresh_token(self) -> bool:
         """Refreshes authentication."""
@@ -136,7 +145,7 @@ class EquationAPI:
             return False
 
         self.auth_token = response_json["id_token"]
-        self.auth_token_expire_date = datetime.now() + timedelta(
+        self.auth_token_expire_date = datetime.now(timezone.utc) + timedelta(
             seconds=int(response_json["expires_in"])
         )
         self.refresh_token = response_json["refresh_token"]
@@ -182,7 +191,7 @@ class EquationAPI:
 
         data = {
             "auth_token": response_json["idToken"],
-            "expires": datetime.now()
+            "expires": datetime.now(timezone.utc)
             + timedelta(seconds=int(response_json["expiresIn"])),
             "refresh_token": response_json["refreshToken"],
             "local_id": response_json["localId"],
@@ -208,9 +217,7 @@ class EquationAPI:
             return ApiResponse(False, None, f"Network error {e}")
 
         if not response:
-            return ApiResponse(
-                False, None, "No response from API call to get_local_id()"
-            )
+            return self._http_error(response, "get_local_id()")
 
         if response.status_code != 200:
             return ApiResponse(
@@ -274,9 +281,7 @@ class EquationAPI:
             return ApiResponse(False, None, f"Network error {e}")
 
         if not response:
-            return ApiResponse(
-                False, "No response from API in get_installation_by_id()"
-            )
+            return self._http_error(response, "get_installation_by_id()")
 
         if response.status_code != 200:
             return ApiResponse(
@@ -309,7 +314,7 @@ class EquationAPI:
             return ApiResponse(False, None, f"Network error {e}")
 
         if not response:
-            return ApiResponse(False, None, "No response from API in get_latest_firmware()")
+            return self._http_error(response, "get_latest_firmware()")
 
         if response.status_code != 200:
             return ApiResponse(
@@ -342,7 +347,7 @@ class EquationAPI:
             return ApiResponse(False, None, f"Network error {e}")
 
         if not response:
-            return ApiResponse(False, None, "No response from API in get_installations()")
+            return self._http_error(response, "get_installations()")
 
         if response.status_code != 200:
             return ApiResponse(
@@ -381,7 +386,7 @@ class EquationAPI:
             return ApiResponse(False, None, f"Network error {e}")
 
         if not response:
-            return ApiResponse(False, None, "No response from API in get_device()")
+            return self._http_error(response, "get_device()")
 
         if response.status_code != 200:
             return ApiResponse(
@@ -438,9 +443,7 @@ class EquationAPI:
             return ApiResponse(False, None, f"Network error {e}")
 
         if not response:
-            return ApiResponse(
-                False, "No response from API in _retrieve_hour_energy_stats()"
-            )
+            return self._http_error(response, "_retrieve_hour_energy_stats()")
 
         if response.status_code != 200:
             return ApiResponse(
@@ -627,9 +630,9 @@ class EquationAPI:
             return ApiResponse(False, None, f"Communications error {e}")
 
         if not response:
-            return ApiResponse(False, None, None)
+            return self._http_error(response, "PATCH")
 
         if response.status_code != 200:
-            return ApiResponse(False, None, None)
+            return ApiResponse(False, None, f"PATCH returned HTTP {response.status_code}")
 
         return ApiResponse(True, None, None)
